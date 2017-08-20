@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<!--
+To change this license header, choose License Headers in Project Properties.
+To change this template file, choose Tools | Templates
+and open the template in the editor.
+-->
+<html ng-app="listaTelefonica">
+    <head >
+        <title>Lista telefonica</title>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <link rel="stylesheet" href="css/bootstrap.css" media="screen">
+        <style>
+            .jumbotron{
+                margin: 0 auto;
+                width: 600px;
+            }
+            
+            .negrito{
+                font-weight: bold;
+            }
+        </style>
+            
+        <script src="js/angular.js"></script>
+        <script>
+          var app =  angular.module("listaTelefonica", []);
+            app.controller("listaTelefonicaCtrl",function($scope, $http){
+                $scope.app = "Lista telefonica";
+                $scope.contatos = [];
+                $scope.operadoras = [
+                    {nome:"Oi",cod:14,categoria:"celular",preco:0},
+                    {nome:"Tim",cod:41,categoria:"celular",preco:1},
+                    {nome:"Vivo",cod:15,categoria:"celular",preco:2},
+                    {nome:"GVT",cod:25,categoria:"fixo",preco:3},
+                    {nome:"Embratel",cod:21,categoria:"fixo",preco:4}
+                ];
+                var carregarContatos = function (){
+                    $http.get('http://localhost:8080/AngularJs/contatos');
+                };
+                $scope.adicionarContato = function (contato){
+                    $scope.contatos.push(angular.copy(contato));
+                };
+                $scope.apagarContatos = function(contatos){
+                    $scope.contatos = contatos.filter(function(contato){
+                        if(!contato.selecionado) return contato;
+                    });
+                };
+                $scope.isContatoSelecionado = function(contatos){
+                    return contatos.some(function(contato){
+                        return contato.selecionado;
+                    });
+                };
+            });
+        </script>
+    </head>
+    <body ng-controller="listaTelefonicaCtrl">
+        <div class="jumbotron">
+            <h4 ng-bind="app"></h4>
+            <input type="text" ng-model="criterioDeBusca" placeholder="O que você está buscando?" class="form-control"/>
+            <table class="table">
+                <tr>
+                    <th></th>
+                    <th>Nome</th>
+                    <th>Número</th>
+                    <th>Data</th>
+                    <th>Operadora</th>
+                    <th>Preco</th>
+                    <th>Cor</th>
+                </tr>
+                <tr ng-class="{'bg-warning': contato.selecionado}" ng-repeat="contato in contatos | filter:criterioDeBusca | orderBy:'nome'">
+                    <td><input type="checkbox" ng-model="contato.selecionado"/></td>
+                    <td>{{contato.nome}}</td>
+                    <td>{{contato.tel}}</td>
+                    <td>{{contato.data | date:'dd/MM/yyyy'}}</td>
+                    <td>{{contato.operadora.nome | uppercase}}</td>
+                    <td>{{contato.operadora.preco | currency}}</td>
+                    <td><div style="width: 20px;height: 20px;" ng-style="{'background-color':contato.cor}"></div></td>
+                </tr>
+            </table>
+            <hr />
+            <form name="contatoForm">
+                <input class="form-control" type="text" placeholder="Nome" ng-model="contato.nome" ng-required="true"/>
+                <input class="form-control" type="text" placeholder="Telefone" ng-model="contato.tel" ng-required="true"/>
+                <select class="form-control" ng-model="contato.operadora" ng-options="operadora.nome for operadora in operadoras">
+                    <option value="">Selecione uma operadora</option>
+                </select>
+            </form>
+            <button class="btn btn-primary btn-block" ng-disabled="contatoForm.$invalid" ng-click="adicionarContato(contato)">Adicionar contato</button>
+            <button class="btn btn-danger btn-block" ng-show="isContatoSelecionado(contatos)"ng-click="apagarContatos(contatos)">Apagar contatos</button>
+        </div>
+        <div style="text-align: center" ng-include="'footer.html'"></div>
+    </body>
+</html>
